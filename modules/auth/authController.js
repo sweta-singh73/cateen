@@ -41,7 +41,10 @@ const createEmp = async (req, res) => {
 //login user****************************************************************************
 const login = async (req, res) => {
   try {
+  
     const { emp_id } = req.body;
+ 
+    if(!emp_id )return res.status(400).json({error:"Employee Id required"})
    
     const employeeExist = await Employee.findOne({ emp_id });
     if (!employeeExist)
@@ -82,6 +85,7 @@ const login = async (req, res) => {
 //verify otp function*******************************************************************
 const verifyOtp = async (req, res) => {
   try {
+    
     const { emp_id, otp } = req.body;
     if (!emp_id || !otp)
       return res.status(400).json({ error: "emp_id and otp are required!" });
@@ -157,6 +161,13 @@ const viewUser = async(req, res)=>{
 //find emp by name**********************************************************************
 const getUserByName = async(req, res)=>{
 try {
+      // Validate the incoming request body using Joi schema
+      const { error } = empValidationSchema.validate(req.body);
+    
+      // If there is a validation error, return a 400 status with the error details
+      if (error) {
+        return res.status(400).json({ error: error.details[0].message });
+      }
   const {emp_id} = req.body;
   if(!emp_id)return res.status(400).json({error:"emp_id and emp_name is required"});
 

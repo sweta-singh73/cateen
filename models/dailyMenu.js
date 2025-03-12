@@ -1,33 +1,26 @@
-
 const mongoose = require("mongoose");
-const subMenuSchema = new mongoose.Schema(
+const dailyMenuSchema = new mongoose.Schema(
   {
-    menu_id: {
-      type: mongoose.Schema.Types.ObjectId, // Changed from String to ObjectId
-      ref: "Menu", // Reference to the menu model
-      required: true,
+    type: {
+      type: mongoose.Schema.Types.ObjectId,  // ObjectId for referencing the Menu model
+      ref: "Menu",  // Reference to the Menu model
+      required: true,  // Ensure the type is required
     },
-    sub_menu_id:
+    sub_menu_items: [
       {
-        type: mongoose.Schema.Types.ObjectId, // Changed from String to ObjectId
-        ref: "Submenu", // Reference to the menu model
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Submenu",  // Reference to Submenu
         required: true,
       },
-    
-
-    quantity: {
-      type: Number,
-      default: 1,
-    },
-
+    ],
     date: {
       type: String,
       required: true,
     },
-    time:{
+    time: {
       type: String,
-      required:true
-    }
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -35,5 +28,5 @@ const subMenuSchema = new mongoose.Schema(
   }
 );
 
-const Dailymenu = mongoose.model("Dailymenu", subMenuSchema);
+const Dailymenu = mongoose.model("Dailymenu", dailyMenuSchema);
 module.exports = Dailymenu;

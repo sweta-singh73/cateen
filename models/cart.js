@@ -13,6 +13,11 @@ const cartSchema = new mongoose.Schema({
         ref: "Submenu", // Ensure it matches your Product model name
         required: true,
       },
+      item_name:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Submenu", // Ensure it matches your Product model name
+        required: true,
+      },
       quantity: {
         type: Number,
         required: true,

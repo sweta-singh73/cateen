@@ -2,61 +2,76 @@
 const Dailymenu = require('../../models/dailyMenu');
 const Menu = require('../../models/menu');
 const Submenu = require('../../models/submenu');
+const mongoose = require("mongoose");
+const moment = require('moment');
 
-const addTodayMenu = async (req, res) => {
+
+//delete today menu *****************************************************************
+
+const createTodayMenu = async (req, res) => {
+  let { sub_menu_items, menuType } = req.body;
+
   try {
-    // Extract sub_menu_id, date, quantity, and time from the request body
-    const { sub_menu_id, date, quantity, time } = req.body;
+    // Get today's date in MM-DD-YYYY format
+    const today = moment(Date.now()).format("MM-DD-YYYY");
 
-    // Check if the submenu exists by its ID
-    const submenuExist = await Submenu.findById(sub_menu_id);
-    if (!submenuExist) {
-      return res.status(400).json({ error: "Submenu does not exist" });
-    }
+    // Get current time in HH:mm:ss format
+    const currentTime = moment().format("HH:mm:ss");
 
-    // Check if the corresponding menu exists for the submenu
-    const menuExist = await Menu.findById(submenuExist.menu_id);
-    if (!menuExist) {
-      return res.status(400).json({ error: "Menu for this submenu does not exist" });
-    }
+    // Log the input values to ensure correct data
+    console.log("Received request:", { sub_menu_items, menuType });
 
-    // Ensure time is provided
-    if (!time) {
-      return res.status(400).json({ error: "Time is required" });
-    }
-
-    // Check if a daily menu already exists for the given submenu, date, and time
-    const existingMenu = await Dailymenu.findOne({
-      sub_menu_items: submenuExist._id,
-      date: date || new Date().toISOString().split('T')[0], // Default to today's date if not provided
-      time: time, // Check for matching time
-    });
-
-    if(existingMenu)return res.status(400).json({error:'daily menu alrady exist'})
-
-    // Prepare the data for the daily menu
-    const dailyMenuData = {
-      menu_id: submenuExist.menu_id,
-      sub_menu_items: submenuExist._id,
-      quantity: quantity || 1, // Default to 1 if no quantity provided
-      date: date || new Date().toISOString().split('T')[0], // Default to today's date if not provided
-      time: time, // Include the time from request
+    // Prepare data for today's menu
+    let data = {
+      sub_menu_items: sub_menu_items,
+      type: menuType, 
+      date: today,    
+      time: currentTime, 
     };
 
-      // If no existing daily menu, create a new one
-      const dailyMenu = new Dailymenu(dailyMenuData);
-      await dailyMenu.save();
 
-      return res.status(201).json({ message: "Daily menu added successfully", dailyMenu });
-    
+    console.log("Data to be saved:", data);
 
-  } catch (error) {
-    // Handle any errors that occur during the process
-    return res.status(500).json({ error: error.message });
+    // First, check if the menu already exists for today and the menuType
+    const existingMenu = await Dailymenu.findOne({ date: today, type: menuType });
+    if (existingMenu) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Menu for today already exists for this menu type.",
+      });
+    }
+
+    // Now, ensure that submenu items belong to the correct menu type
+    const menuItems = await Menu.find({ '_id': { $in: sub_menu_items } });
+
+    const invalidItems = menuItems.filter(item => item.menu_id.toString() !== menuType);
+    if (invalidItems.length > 0) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: `Some submenu items do not belong to the ${menuType} menu: ${invalidItems.map(item => item.title).join(', ')}`,
+      });
+    }
+
+    // Add the menu for today if it doesn't exist and submenu items are valid
+    await Dailymenu.create(data);
+
+    return res.status(200).json({
+      statusCode: 200,
+      message: "Menu added successfully for today.",
+    });
+
+  } catch (err) {
+    console.error("Error creating today menu:", err);  // Add logging for errors
+    return res.status(500).json({
+      statusCode: 500,
+      message: err.message,
+    });
   }
 };
 
-//delete today menu ******************************************************************
+
+
+
 const deleteTodayMenu = async(req, res)=>{
   try {
     const today_menu_id = req.params.id;
@@ -69,9 +84,48 @@ const deleteTodayMenu = async(req, res)=>{
   }
 }
 
+//get all items**********************************************************************
+// const getAllTodayMenus = async (req, res) => {
+//   try {
+//     const todayMenus = await Dailymenu.find(
+ 
+//     ).populate("")
+
+//     return res.status(200).json({
+//       message: "Today menu items fetched successfully",
+//       data: todayMenus
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ error: error.message });
+//   }
+// };
+const getAllTodayMenus = async (req, res) => {
+  try {
+    const todayMenus = await Dailymenu.find()
+      .populate({
+        path: "menu_id",  // Populate menu details
+        select: "title time",  // Select fields from the Menu model
+      })
+      .populate({
+        path: "sub_menu_id",  // Populate submenus
+        select: "item_name quantity price",  // Select fields from the Submenu model
+      });
+
+    return res.status(200).json({
+      message: "Today menu items fetched successfully",
+      data: todayMenus,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 
 
-module.exports = { addTodayMenu, deleteTodayMenu };
+
+
+
+
+module.exports = { createTodayMenu, deleteTodayMenu, getAllTodayMenus };
 
 
 

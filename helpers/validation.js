@@ -62,29 +62,7 @@ const empValidationSchema = Joi.object({
     }),
     otherwise:Joi.forbidden(),
 
-  // balance: Joi.number()
-  //   .precision(2) // Allows up to 2 decimal places
-  //   .min(0)
-  //   .required()
-  //   .messages({
-  //     'number.base': 'Balance must be a valid number.',
-  //     'number.min': 'Balance cannot be negative.',
-  //     'any.required': 'Balance is required.',
-  //   }),
-  //   otherwise:Joi.forbidden(),
-
-  // wallet: Joi.number()
-  //   .precision(2) // Allows up to 2 decimal places
-  //   .min(0)
-  //   .max(Joi.ref('balance')) // Wallet cannot exceed the balance
-  //   .required()
-  //   .messages({
-  //     'number.base': 'Wallet amount must be a valid number.',
-  //     'number.min': 'Wallet balance cannot be negative.',
-  //     'number.max': 'Wallet amount cannot exceed total balance.',
-  //     'any.required': 'Wallet is required.',
-  //   }),
-  //   otherwise:Joi.forbidden(),
+    
 });
 
 module.exports = empValidationSchema;
